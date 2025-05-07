@@ -16,7 +16,7 @@ def executeInstance():
         for cont in range(0,101,5):
             alpha = cont/100
             time_start = time.time()
-            sol = grasp.execute(inst, 10, alpha)
+            sol, _ = grasp.execute(inst, 1, alpha)
             time_final = time.time()-time_start
             #print("\nBEST SOLUTION:")
             #solution.printSolution(sol)
