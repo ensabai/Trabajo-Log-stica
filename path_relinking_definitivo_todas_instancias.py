@@ -178,14 +178,14 @@ def ejecutar_grasp_pr(total_time_limit=60, carpeta="instances"):
         print(f"   Elementos: {sorted(best_global['sol'])}")
 
         resultados.append({
-            "archivo": archivo,
+            "archivo": archivo[:-4],
             "alpha": alpha,
             "valor": best_global['of'],
             "tiempo": tiempo_final
         })
 
     df = pd.DataFrame(resultados)
-    df.to_csv(f"resultados/resultados_pr_{total_time_limit}.0s.csv", index=False, sep=";")
+    df.to_csv(f"resultados/resultados_pr_{float(total_time_limit)}s.csv", index=False, sep=";")
     print("\nResultados guardados en 'resultados_grasp_pr.csv'")
 
 
