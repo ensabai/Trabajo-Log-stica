@@ -148,6 +148,8 @@ def ejecutar_grasp_pr(total_time_limit=60, carpeta="instances"):
             print(f"Error leyendo {archivo}: {e}")
             continue
 
+        start_global = time.time()
+
         best_grasp, _, t_grasp, elite = run_grasp(inst, total_time_limit / 2, alpha, elite_size, diversity_weight)
         best_global = copy.deepcopy(best_grasp)
 
@@ -169,21 +171,21 @@ def ejecutar_grasp_pr(total_time_limit=60, carpeta="instances"):
             pr2 = path_relinking(elite[j], elite[i], beta)
             if pr2['of'] > best_global['of']:
                 best_global = copy.deepcopy(pr2)
+        
+        tiempo_final = time.time() - start_global
 
         print(f"\nMejor solución para {archivo} (OF: {best_global['of']}):")
         print(f"   Elementos: {sorted(best_global['sol'])}")
 
         resultados.append({
-            "instancia": archivo,
-            "grasp_mejor": best_grasp['of'],
-            "grasp_elite": len(elite),
-            "pr_mejor": best_global['of'],
-            "mejora_abs": round(best_global['of'] - best_grasp['of'], 2),
-            "mejor_solucion_pr": sorted(best_global['sol'])
+            "archivo": archivo,
+            "alpha": alpha,
+            "valor": best_global['of'],
+            "tiempo": tiempo_final
         })
 
     df = pd.DataFrame(resultados)
-    df.to_csv("resultados_grasp_pr.csv", index=False)
+    df.to_csv(f"resultados/resultados_pr_{total_time_limit}.0s.csv", index=False, sep=";")
     print("\nResultados guardados en 'resultados_grasp_pr.csv'")
 
 
