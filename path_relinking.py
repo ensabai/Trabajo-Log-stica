@@ -2,8 +2,9 @@ from structure import instance, solution
 from algorithms import grasp
 from copy import deepcopy
 import pandas as pd
+import time
 
-def relink(start, guide):
+def relink(start, guide, start_time, max_time):
     current = deepcopy(start)
     best = deepcopy(start)
     to_add = guide["sol"] - current["sol"]
@@ -13,6 +14,11 @@ def relink(start, guide):
         vecinos = []
         for a in to_add:
             for r in to_remove:
+                # Control de tiempo dentro de relink
+                if time.time() - start_time > max_time:
+                    print("Tiempo límite alcanzado dentro de relink")
+                    return best
+                
                 nuevo = deepcopy(current)
                 nuevo["sol"].remove(r)
                 nuevo["sol"].add(a)
@@ -20,15 +26,17 @@ def relink(start, guide):
                 vecinos.append(nuevo)
         if not vecinos:
             break
+
         current = max(vecinos, key=lambda s: s["of"])
         if current["of"] > best["of"]:
             best = deepcopy(current)
+            
         to_add = guide["sol"] - current["sol"]
         to_remove = current["sol"] - guide["sol"]
 
     return best
 
-def pathRelinking(path, alpha=0.1, tiempo=60, elite_size=5):
+def pathRelinking(path, alpha, tiempo, elite_size):
     """
     Ejecuta GRASP + Path Relinking sobre una instancia.
 
@@ -59,18 +67,29 @@ def pathRelinking(path, alpha=0.1, tiempo=60, elite_size=5):
             seen.add(frozen)
         if len(elite) >= elite_size:
             break
-
-    # Aplicar PR entre pares de soluciones élite
+    
+    # Iniciamos control del tiempo para la parte de PR
+    start_time = time.time()
+    # Aplicamos PR entre pares de soluciones élite
     soluciones_pr = []
     mejor_pr = None
+
     for i in range(len(elite)):
         for j in range(i + 1, len(elite)):
-            pr1 = relink(elite[i], elite[j])
-            pr2 = relink(elite[j], elite[i])
+            # Verifica si se excedió el tiempo total asignado
+            if time.time() - start_time > tiempo:
+                print("Límite de tiempo alcanzado en PR; saliendo de los bucles.")
+                break
+
+            pr1 = relink(elite[i], elite[j], start_time, tiempo)
+            pr2 = relink(elite[j], elite[i], start_time, tiempo)
+
             soluciones_pr.extend([pr1, pr2])
+            
             for sol in [pr1, pr2]:
                 if mejor_pr is None or sol["of"] > mejor_pr["of"]:
                     mejor_pr = sol
 
+    # Nota: Si se sale anticipadamente, soluciones_pr contendrá solo aquellas generadas hasta ese momento.
     df_pr = pd.DataFrame(soluciones_pr)
     return mejor_pr, df_pr
